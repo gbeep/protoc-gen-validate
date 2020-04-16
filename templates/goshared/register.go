@@ -2,6 +2,7 @@ package goshared
 
 import (
 	"fmt"
+	"github.com/envoyproxy/protoc-gen-validate/gogoproto"
 	"github.com/iancoleman/strcase"
 	"reflect"
 	"strings"
@@ -21,7 +22,7 @@ func Register(tpl *template.Template, params pgs.Parameters) {
 	tpl.Funcs(map[string]interface{}{
 		"accessor":      fns.accessor,
 		"byteStr":       fns.byteStr,
-		"snakeCase":	 fns.snakeCase,
+		"snakeCase":     fns.snakeCase,
 		"cmt":           pgs.C80,
 		"durGt":         fns.durGt,
 		"durLit":        fns.durLit,
@@ -93,6 +94,12 @@ type goSharedFuncs struct{ pgsgo.Context }
 func (fns goSharedFuncs) accessor(ctx shared.RuleContext) string {
 	if ctx.AccessorOverride != "" {
 		return ctx.AccessorOverride
+	}
+
+	var cname string
+	ctx.Field.Extension(gogoproto.E_Customname, &cname)
+	if cname != "" {
+		return fmt.Sprintf("m.Get%s()", cname)
 	}
 
 	return fmt.Sprintf("m.Get%s()", fns.Name(ctx.Field))
